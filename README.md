@@ -16,7 +16,7 @@ part_ptcloud.csv file is under data folder
 
 all utilities are running as black box
 
-only output is final transformtaion KukaBase_T_part
+only output is final transformation KukaBase_T_part
 
 As of now, i have kept outputs under main function- Aniruddha S.
 
