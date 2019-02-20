@@ -1519,10 +1519,10 @@ lapacke_mangling.h
 /usr/local/include/eigen3/Eigen/src/plugins/MatrixCwiseUnaryOps.h
 
 /usr/local/include/nabo/nabo.h
-Eigen/Core
-/usr/local/include/nabo/Eigen/Core
-Eigen/Array
-/usr/local/include/nabo/Eigen/Array
+/usr/local/include/eigen3/Eigen/Core
+-
+/usr/local/include/eigen3/Eigen/Array
+-
 vector
 -
 map

@@ -12,6 +12,7 @@ include_directories(/usr/local/include/eigen3)
 include_directories(/usr/local/include)
 include_directories(/home/aniruddha/Desktop/ICP/ICP_SVD/include)
 include_directories(/home/aniruddha/Desktop/ICP/ICP_SVD/data)
+# include_directories(/usr/local/cuda/include)
 
 #link
 link_directories(/usr/local/build/libnabo.a)
@@ -27,7 +28,6 @@ set(UTLIB src/utilities.cpp
 
 ##############################################################
 set(MAIN_FILE src/main_file.cpp)
-
 ##############################################################
 
 add_executable(${EXEC} ${MAIN_FILE} ${UTLIB})
@@ -37,5 +37,7 @@ add_executable(${EXEC} ${MAIN_FILE} ${UTLIB})
 target_link_libraries(${EXEC} /usr/local/build/libnabo.a gomp)
 #link library for nlopt 
 target_link_libraries (${EXEC} ${nlopt_ADDED_LIBS})
+
+# target_link_libraries(${EXEC} /usr/local/cuda/bin/nvcc)
 
 set_property(TARGET ${EXEC} PROPERTY CXX_STANDARD 14)

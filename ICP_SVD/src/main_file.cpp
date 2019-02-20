@@ -17,7 +17,6 @@ Eigen::Matrix4d ICP_SVD_with_AnchorPoints(Eigen::MatrixXd, Eigen::MatrixXd, Eige
 int main()
 {
     // perfromance measure
-    auto start = std::chrono::high_resolution_clock::now(); 
 
     int max_iter = 300;
     
@@ -28,10 +27,6 @@ int main()
     
     Eigen::Matrix4d Transform_mat_new = ICP_SVD_with_AnchorPoints(model_ptcloud, scan_ptcloud, part_pts, scan_pts, max_iter);
     std::cout << Transform_mat_new << std::endl;
-
-    auto stop = std::chrono::high_resolution_clock::now(); 
-    auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(stop - start); 
-    std::cout << "Time elapsed : "<< duration.count() << " ms" << std::endl; 
     return 0;
 }
 
@@ -39,7 +34,7 @@ Eigen::Matrix4d ICP_SVD_with_AnchorPoints(Eigen::MatrixXd model_ptcloud, Eigen::
 {
     // NOTE: gives transformation matrix scan_T_model (part w.r.t. robot frame assuming that scan_ptcloud is with respect to robot frame) 
 
-    Eigen::Matrix4d T_init = Eigen::Matrix4d::Constant(0);
+    Eigen::Matrix4d T_init = Eigen::Matrix4d::Identity();
     if (part_pts.rows()>0 && scan_pts.rows()>0)
     {
         T_init = rtf::get_rob_T_part(part_pts,scan_pts);
@@ -49,7 +44,7 @@ Eigen::Matrix4d ICP_SVD_with_AnchorPoints(Eigen::MatrixXd model_ptcloud, Eigen::
     // create a kd-tree for M, note that M must stay valid during the lifetime of the kd-tree
     Eigen::MatrixXd model_ptcloud_t = model_ptcloud.transpose();
     Nabo::NNSearchD * nd = Nabo::NNSearchD::createKDTreeLinearHeap(model_ptcloud_t);
-    Eigen::Matrix4d Transform_mat_new = Eigen::Matrix4d::Identity();
+    Eigen::Matrix4d Transform_mat_new = T_init.inverse();
     Eigen::Matrix4d Transform_mat = Eigen::Matrix4d::Constant(0);
     int k = 1;
     double tol = 1e-6;
@@ -57,27 +52,27 @@ Eigen::Matrix4d ICP_SVD_with_AnchorPoints(Eigen::MatrixXd model_ptcloud, Eigen::
     Eigen::MatrixXi idx(k,scan_ptcloud.rows());
     Eigen::MatrixXd dist(k,scan_ptcloud.rows());
     Eigen::MatrixXd corresponding_val_from_model_ptcloud(scan_ptcloud.rows(), scan_ptcloud.cols());    
-    for (unsigned long iter=0;iter<max_iter;++iter)
+    for (unsigned int iter=0;iter<max_iter;++iter)
     {
         nd->knn(scan_ptcloud.transpose(), idx, dist, k);   
-        for (unsigned long i=0;i<idx.cols();++i)
+        for (unsigned int i=0;i<idx.cols();++i)
         {
             corresponding_val_from_model_ptcloud.row(i) = model_ptcloud.row(idx(0,i));    
         }
         // get transformation matrix
         Transform_mat = rtf::get_rob_T_part(corresponding_val_from_model_ptcloud,scan_ptcloud);
-        Transform_mat_new = Transform_mat*Transform_mat_new;       
+        Transform_mat_new = Transform_mat.inverse()*Transform_mat_new;        
         if(Transform_mat(0,3)<tol && Transform_mat(1,3)<tol && Transform_mat(2,3)<tol) 
         {
             count++;
             if(count>5)
             {
-                std::cout << iter << std::endl;
                 break;
             }
         }
         scan_ptcloud_transformed = rtf::apply_transformation(scan_ptcloud,Transform_mat.inverse());
         scan_ptcloud = scan_ptcloud_transformed;
     }
-    return T_init*Transform_mat_new;
+    delete(nd);
+    return Transform_mat_new.inverse();
 }
